@@ -15,15 +15,8 @@
             min-height: 100vh;
             position: relative;
         }
-        h1 {
-            color: #ffcc00;
-            margin: 15px 0 10px;
-            font-size: 2.6em;
-        }
-        #hud {
-            font-size: 1.9em;
-            margin: 10px 0 25px;
-        }
+        h1 { color: #ffcc00; margin: 15px 0 10px; font-size: 2.6em; }
+        #hud { font-size: 1.9em; margin: 10px 0 25px; }
         #score { color: #4caf50; }
         #coins { color: #ffd700; }
         #high-score {
@@ -37,24 +30,21 @@
             border-radius: 8px;
             z-index: 20;
         }
-        #game-container {
-            max-width: 1250px;
-            margin: 0 auto;
-            width: 100%;
-        }
+        #game-container { max-width: 1250px; margin: 0 auto; width: 100%; }
         #game-area {
             display: flex;
             justify-content: center;
             gap: 90px;
-            margin: 20px auto 120px; /* больше места снизу для результата */
+            margin: 20px auto 120px;
             width: 100%;
-            min-height: 700px; /* фиксированная высота зоны карточек */
+            min-height: 700px;
         }
         .card-container {
             width: 520px;
-            min-height: 700px; /* фиксированная высота контейнера карточки */
+            min-height: 700px;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
         .card {
             width: 100%;
@@ -69,6 +59,7 @@
             aspect-ratio: 3 / 4;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
         .card:hover {
             transform: scale(1.03);
@@ -76,20 +67,29 @@
         }
         .card img {
             width: 100%;
-            height: auto;
-            flex-grow: 1;
+            height: 100%;
             object-fit: contain;
             background: #000;
+            flex-grow: 1;
         }
-        .info {
-            padding: 14px;
-            font-size: 1.3em;
+        .score-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.65);
+            color: #ffcc00;
+            font-size: 1.5em;
+            font-weight: bold;
+            padding: 12px 0;
             text-align: center;
-            background: rgba(0,0,0,0.75);
-            display: none;
+            pointer-events: none;
+            text-shadow: 0 0 6px rgba(0,0,0,0.9);
+            opacity: 0;
+            transition: opacity 0.4s ease;
         }
-        .revealed .info {
-            display: block;
+        .revealed .score-overlay {
+            opacity: 1;
         }
         .dimmed {
             opacity: 0.55;
@@ -121,11 +121,7 @@
             gap: 16px;
             z-index: 10;
         }
-        #powerups {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
+        #powerups { display: flex; flex-direction: column; gap: 16px; }
         .powerup-btn {
             width: 180px;
             height: 80px;
@@ -173,15 +169,10 @@
             padding: 6px 14px;
             border-radius: 8px;
         }
-        #footer-fixed a {
-            color: #ffcc00;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        #footer-fixed a:hover {
-            text-decoration: underline;
-        }
-        /* Age warning overlay */
+        #footer-fixed a { color: #ffcc00; text-decoration: none; font-weight: bold; }
+        #footer-fixed a:hover { text-decoration: underline; }
+
+        /* Age warning */
         #age-warning {
             position: fixed;
             inset: 0;
@@ -194,17 +185,8 @@
             padding: 30px;
             text-align: center;
         }
-        #age-warning h2 {
-            color: #ff4444;
-            font-size: 2.8em;
-            margin-bottom: 20px;
-        }
-        #age-warning p {
-            font-size: 1.4em;
-            max-width: 700px;
-            margin: 0 auto 40px;
-            line-height: 1.5;
-        }
+        #age-warning h2 { color: #ff4444; font-size: 2.8em; margin-bottom: 20px; }
+        #age-warning p { font-size: 1.4em; max-width: 700px; margin: 0 auto 40px; line-height: 1.5; }
         .age-btn {
             padding: 18px 60px;
             font-size: 1.5em;
@@ -214,63 +196,33 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        #confirm-18 {
-            background: #28a745;
-            color: white;
-        }
-        #confirm-18:hover {
-            background: #218838;
-        }
-        #exit-under18 {
-            background: #dc3545;
-            color: white;
-        }
-        #exit-under18:hover {
-            background: #c82333;
-        }
+        #confirm-18 { background: #28a745; color: white; }
+        #confirm-18:hover { background: #218838; }
+        #exit-under18 { background: #dc3545; color: white; }
+        #exit-under18:hover { background: #c82333; }
     </style>
 </head>
 <body>
 
-    <!-- Age verification overlay -->
     <div id="age-warning">
         <h2>18+ WARNING</h2>
-        <p>
-            This website contains explicit adult content.<br>
-            By continuing you confirm that you are at least 18 years old<br>
-        </p>
+        <p>This website contains explicit adult content.<br>By continuing you confirm that you are at least 18 years old</p>
         <button id="confirm-18" class="age-btn">I'm older than 18</button>
         <button id="exit-under18" class="age-btn">I'm under 18</button>
     </div>
 
-    <!-- Highest score -->
     <div id="high-score">Highest Score: 0</div>
 
     <div id="game-container">
         <main>
             <h1>e621 Score Guessing Game</h1>
-
             <div id="hud">
-                <span id="score">Score: 0</span>  
-                <span style="margin: 0 25px;">•</span>  
+                <span id="score">Score: 0</span>
+                <span style="margin: 0 25px;">•</span>
                 <span id="coins">Coins: 0</span>
             </div>
-
             <div id="message">Which one has the higher score? Click to guess!</div>
-            <div id="game-area">
-                <div class="card-container">
-                    <div class="card" id="card-left">
-                        <div id="loading-left">Loading...</div>
-                    </div>
-                </div>
-                <div class="card-container">
-                    <div class="card" id="card-right">
-                        <div id="loading-right">Loading...</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Результат появляется под карточками -->
+            <div id="game-area"></div>
             <div id="result-message"></div>
 
             <div id="sidebar">
@@ -283,7 +235,6 @@
         </main>
     </div>
 
-    <!-- Фиксированный футер в правом нижнем углу -->
     <div id="footer-fixed">
         Developed by <a href="https://e621.net/users/YOUR_USER_ID_HERE" target="_blank">Kitsune</a>
     </div>
@@ -292,15 +243,17 @@
         const API_BASE = 'https://e621.net/posts.json';
         const USER_AGENT = 'ScoreGuessGame/1.0 (by Kitsune on e621)';
         const MIN_SCORE = 1000;
-        const INITIAL_FETCH = 8;
-        const PREFETCH_COUNT = 4;
+        const MIN_SCORE_DIFFERENCE = 200;
+        const INITIAL_FETCH = 12;          
+        const PREFETCH_COUNT = 6;
         const REVEAL_PAUSE_MS = 2500;
+        const MAX_PAIR_ATTEMPTS = 30;
 
         const STORAGE_KEY_COINS = 'e621-guess-game-coins';
         const STORAGE_KEY_HIGH_SCORE = 'e621-guess-game-high-score';
         const STORAGE_KEY_AGE_CONFIRMED = 'e621-age-confirmed';
 
-        // Age verification (навсегда)
+        // Age verification
         const ageWarning = document.getElementById('age-warning');
         const gameContainer = document.getElementById('game-container');
         const confirm18 = document.getElementById('confirm-18');
@@ -320,9 +273,7 @@
             startGame();
         });
 
-        exitUnder18.addEventListener('click', () => {
-            window.close();
-        });
+        exitUnder18.addEventListener('click', () => window.close());
 
         // Game logic
         let score = 0;
@@ -340,10 +291,9 @@
         const messageEl = document.getElementById('message');
         const resultMessageEl = document.getElementById('result-message');
         const gameArea = document.getElementById('game-area');
-
-        const puRevealOne  = document.getElementById('powerup-reveal-one');
+        const puRevealOne = document.getElementById('powerup-reveal-one');
         const puRevealBoth = document.getElementById('powerup-reveal-both');
-        const puSkip       = document.getElementById('powerup-skip');
+        const puSkip = document.getElementById('powerup-skip');
 
         function saveData() {
             localStorage.setItem(STORAGE_KEY_COINS, coins);
@@ -354,9 +304,9 @@
             scoreEl.textContent = `Score: ${score}`;
             coinsEl.textContent = `Coins: ${coins}`;
             highScoreEl.textContent = `Highest Score: ${highScore}`;
-            puRevealOne.disabled  = coins < 5;
+            puRevealOne.disabled = coins < 5;
             puRevealBoth.disabled = coins < 10;
-            puSkip.disabled       = coins < 8;
+            puSkip.disabled = coins < 8;
             saveData();
         }
 
@@ -370,13 +320,11 @@
         async function fetchPosts(count = PREFETCH_COUNT) {
             const tags = `score:>${MIN_SCORE} order:random`;
             const url = `${API_BASE}?limit=${count}&tags=${encodeURIComponent(tags)}`;
-
             try {
                 const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
                 if (!res.ok) throw new Error(`API error: ${res.status}`);
                 const data = await res.json();
                 let posts = data.posts || [];
-
                 posts = posts.filter(post => {
                     const ext = post.file?.ext?.toLowerCase() || '';
                     const rating = post.rating?.toLowerCase() || '';
@@ -385,7 +333,6 @@
                            post.score?.total >= MIN_SCORE &&
                            rating !== 's';
                 });
-
                 return posts;
             } catch (err) {
                 console.error(err);
@@ -395,7 +342,7 @@
         }
 
         async function prefetchMore() {
-            if (postCache.length < 6 && !isLoadingNext) {
+            if (postCache.length < 10 && !isLoadingNext) {  // чуть больше кэша
                 isLoadingNext = true;
                 const newPosts = await fetchPosts(PREFETCH_COUNT);
                 postCache.push(...newPosts);
@@ -404,21 +351,39 @@
         }
 
         async function getNextPair() {
-            while (postCache.length < 2) {
-                messageEl.textContent = 'Loading more images...';
-                await prefetchMore();
-                if (postCache.length === 0) return [];
+            let attempts = 0;
+
+            while (attempts < MAX_PAIR_ATTEMPTS) {
+                attempts++;
+
+                while (postCache.length < 2) {
+                    messageEl.textContent = 'Loading more images...';
+                    await prefetchMore();
+                    if (postCache.length === 0) return [];
+                }
+
+                let a = postCache.shift();
+                let b = postCache.shift();
+
+                
+                while (a?.id === b?.id && postCache.length >= 1) {
+                    b = postCache.shift();
+                }
+
+                if (!a || !b) continue;
+
+                const diff = Math.abs(a.score.total - b.score.total);
+
+                if (diff >= MIN_SCORE_DIFFERENCE) {
+                    prefetchMore();
+                    return [a, b];
+                }
+
+               
             }
 
-            let a = postCache.shift();
-            let b = postCache.shift();
-
-            if (a.id === b.id && postCache.length >= 1) {
-                b = postCache.shift();
-            }
-
-            prefetchMore();
-            return [a, b];
+            messageEl.textContent = 'Не удалось найти пару с достаточной разницей в скоре...';
+            return [];
         }
 
         function getImageUrl(post) {
@@ -436,21 +401,19 @@
             img.alt = `Post ${post.id}`;
             img.loading = 'lazy';
 
-            const info = document.createElement('div');
-            info.className = 'info';
+            const scoreOverlay = document.createElement('div');
+            scoreOverlay.className = 'score-overlay';
+            scoreOverlay.textContent = `Score: ${post.score.total}`;
 
             div.appendChild(img);
-            div.appendChild(info);
+            div.appendChild(scoreOverlay);
 
             div.addEventListener('click', () => handleGuess(index));
-
             return div;
         }
 
         function showPair(pair) {
-            // Полностью очищаем старые карточки
             gameArea.innerHTML = '';
-
             currentPair = pair;
 
             pair.forEach((post, i) => {
@@ -460,38 +423,25 @@
                 gameArea.appendChild(container);
             });
 
-            // Инструкция показывается только до первого выбора
             if (!hasChosen) {
                 messageEl.textContent = 'Which one has the higher score? Click to guess!';
                 messageEl.style.color = '#eee';
             } else {
                 messageEl.style.display = 'none';
             }
-
-            resultMessageEl.textContent = ''; // очищаем результат от предыдущего раунда
+            resultMessageEl.textContent = '';
         }
 
-        function revealScores(indices = [0, 1]) {
-            currentPair.forEach((post, i) => {
-                if (indices.includes(i)) {
-                    const container = gameArea.children[i];
-                    const card = container.querySelector('.card');
-                    card.classList.add('revealed');
-                    const info = card.querySelector('.info');
-                    const artist = post.tags?.artist?.[0] || 'Unknown';
-                    info.innerHTML = `
-                        <strong>Score: ${post.score.total}</strong><br>
-                        Artist: ${artist}<br>
-                        Rating: ${post.rating?.toUpperCase() || '?'} • ID: ${post.id}
-                    `;
-                }
-            });
+        function revealScore(index) {
+            const container = gameArea.children[index];
+            if (!container) return;
+            const card = container.querySelector('.card');
+            card.classList.add('revealed');
         }
 
         function handleGuess(clickedIndex) {
             if (currentPair.length !== 2) return;
 
-            // После первого выбора скрываем инструкцию
             if (!hasChosen) {
                 hasChosen = true;
                 messageEl.style.display = 'none';
@@ -502,7 +452,6 @@
             const higherIndex = left.score.total > right.score.total ? 0 : 1;
             const won = clickedIndex === higherIndex;
 
-            // Показываем результат ПОД карточками
             if (won) {
                 score += 1;
                 currentStreak += 1;
@@ -518,33 +467,36 @@
             }
 
             updateUI();
-            revealScores([0, 1]);
+
+            revealScore(0);
+            revealScore(1);
 
             const higherContainer = gameArea.children[higherIndex];
-            const lowerContainer = gameArea.children[1 - higherIndex];
+            const lowerContainer  = gameArea.children[1 - higherIndex];
             const higherCard = higherContainer.querySelector('.card');
-            const lowerCard = lowerContainer.querySelector('.card');
+            const lowerCard  = lowerContainer.querySelector('.card');
 
             higherCard.classList.add('highlighted');
             lowerCard.classList.add('dimmed');
-
             higherCard.style.borderColor = '#4caf50';
-            lowerCard.style.borderColor = '#f44336';
+            lowerCard.style.borderColor  = '#f44336';
 
             currentPair = [];
 
             setTimeout(async () => {
                 higherCard.classList.remove('highlighted');
                 lowerCard.classList.remove('dimmed');
+                higherCard.style.borderColor = '#444';
+                lowerCard.style.borderColor  = '#444';
 
-                resultMessageEl.textContent = ''; // очищаем результат перед новой парой
+                resultMessageEl.textContent = '';
 
                 const nextPair = await getNextPair();
                 if (nextPair.length === 2) {
                     if (Math.random() < 0.5) nextPair.reverse();
                     showPair(nextPair);
                 } else {
-                    resultMessageEl.innerHTML = 'No more images available<br>Refresh to play again';
+                    resultMessageEl.innerHTML = 'No more suitable images available<br>Refresh to play again';
                     gameArea.innerHTML = '<div id="loading">No images left</div>';
                 }
             }, REVEAL_PAUSE_MS);
@@ -554,8 +506,8 @@
             if (coins < 5 || currentPair.length !== 2) return;
             coins -= 5;
             updateUI();
-            const rand = Math.random() < 0.5 ? 0 : 1;
-            revealScores([rand]);
+            const randIndex = Math.random() < 0.5 ? 0 : 1;
+            revealScore(randIndex);
             resultMessageEl.textContent = 'Revealed one score';
             resultMessageEl.style.color = '#ffcc00';
         };
@@ -564,7 +516,8 @@
             if (coins < 10 || currentPair.length !== 2) return;
             coins -= 10;
             updateUI();
-            revealScores([0, 1]);
+            revealScore(0);
+            revealScore(1);
             resultMessageEl.textContent = 'Revealed both scores';
             resultMessageEl.style.color = '#ffcc00';
         };
@@ -593,7 +546,10 @@
             resultMessageEl.textContent = '';
             updateUI();
             messageEl.textContent = 'Fetching initial images...';
-            gameArea.innerHTML = '<div class="card-container"><div class="card"><div id="loading">Loading...</div></div></div><div class="card-container"><div class="card"><div id="loading">Loading...</div></div></div>';
+            gameArea.innerHTML = `
+                <div class="card-container"><div class="card"><div id="loading">Loading...</div></div></div>
+                <div class="card-container"><div class="card"><div id="loading">Loading...</div></div></div>
+            `;
 
             const initialPosts = await fetchPosts(INITIAL_FETCH);
             postCache.push(...initialPosts);
@@ -604,16 +560,14 @@
                 showPair(firstPair);
                 prefetchMore();
             } else {
-                messageEl.textContent = 'Not enough valid posts — try again later';
+                messageEl.textContent = 'Not enough valid posts with score difference ≥ 200 — try again later';
             }
         }
 
-        // Initial start after age confirmation
         if (localStorage.getItem(STORAGE_KEY_AGE_CONFIRMED) === 'true') {
             startGame();
         }
 
-        // Показываем рекорд при загрузке
         document.addEventListener('DOMContentLoaded', () => {
             highScoreEl.textContent = `Highest Score: ${highScore}`;
         });
