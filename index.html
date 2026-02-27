@@ -13,14 +13,7 @@
             padding: 20px;
             text-align: center;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            position: relative;
         }
         h1 {
             color: #ffcc00;
@@ -32,7 +25,18 @@
             margin: 10px 0 25px;
         }
         #score { color: #4caf50; }
-        #coins  { color: #ffd700; }
+        #coins { color: #ffd700; }
+        #high-score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 1.4em;
+            color: #ffcc00;
+            background: rgba(0,0,0,0.5);
+            padding: 8px 16px;
+            border-radius: 8px;
+            z-index: 20;
+        }
         #game-container {
             max-width: 1250px;
             margin: 0 auto;
@@ -42,18 +46,29 @@
             display: flex;
             justify-content: center;
             gap: 90px;
-            margin: 20px auto 50px;
+            margin: 20px auto 120px; /* больше места снизу для результата */
             width: 100%;
+            min-height: 700px; /* фиксированная высота зоны карточек */
+        }
+        .card-container {
+            width: 520px;
+            min-height: 700px; /* фиксированная высота контейнера карточки */
+            display: flex;
+            flex-direction: column;
         }
         .card {
-            width: 520px;
+            width: 100%;
+            min-height: 650px;
             background: #1a1a1a;
             border: 4px solid #444;
             border-radius: 20px;
             overflow: hidden;
             cursor: pointer;
-            transition: all 0.25s;
+            transition: all 0.8s ease;
             box-shadow: 0 6px 20px rgba(0,0,0,0.8);
+            aspect-ratio: 3 / 4;
+            display: flex;
+            flex-direction: column;
         }
         .card:hover {
             transform: scale(1.03);
@@ -62,7 +77,8 @@
         .card img {
             width: 100%;
             height: auto;
-            display: block;
+            flex-grow: 1;
+            object-fit: contain;
             background: #000;
         }
         .info {
@@ -75,91 +91,96 @@
         .revealed .info {
             display: block;
         }
+        .dimmed {
+            opacity: 0.55;
+            filter: grayscale(60%);
+        }
+        .highlighted {
+            transform: scale(1.10);
+            box-shadow: 0 0 25px rgba(76, 175, 80, 0.6);
+        }
         #message {
             font-size: 2.1em;
-            margin: 15px 0 30px;
+            margin: 15px 0 20px;
             min-height: 2.4em;
+        }
+        #result-message {
+            font-size: 1.8em;
+            margin: 20px 0;
+            min-height: 60px;
+            font-weight: bold;
         }
         #sidebar {
             position: fixed;
             top: 140px;
             right: 15px;
-            width: 200px;
+            width: 220px;
             display: flex;
             flex-direction: column;
             align-items: flex-end;
-            gap: 18px;
+            gap: 16px;
             z-index: 10;
         }
         #powerups {
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 16px;
         }
         .powerup-btn {
-            width: 160px;
-            height: 68px;
-            font-size: 1em;
+            width: 180px;
+            height: 80px;
+            font-size: 1.1em;
             font-weight: bold;
             color: white;
-            background: #3c3c3c;
-            border: 3px solid #666;
-            border-radius: 14px;
+            background: linear-gradient(135deg, #4a4a4a, #2a2a2a);
+            border: 3px solid #777;
+            border-radius: 16px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 6px;
+            padding: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
         }
         .powerup-btn:hover:not(:disabled) {
-            transform: scale(1.08);
-            border-color: #aaa;
+            transform: translateY(-4px) scale(1.05);
+            border-color: #ffcc00;
+            box-shadow: 0 8px 25px rgba(255, 204, 0, 0.4);
         }
         .powerup-btn:disabled {
-            opacity: 0.4;
+            opacity: 0.35;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         .powerup-btn .cost {
-            font-size: 0.9em;
+            font-size: 0.95em;
             color: #ffcc00;
+            margin-top: 4px;
         }
-        #new-game {
-            padding: 16px 40px;
-            font-size: 1.4em;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            width: 100%;
-        }
-        #new-game:hover {
-            background: #0062cc;
-        }
-
-        footer {
-            margin-top: auto;
-            padding: 20px 0;
+        #footer-fixed {
+            position: fixed;
+            bottom: 10px;
+            right: 20px;
             font-size: 1.1em;
             color: #aaa;
-            text-align: center;
-            border-top: 1px solid #333;
-            background: rgba(0,0,0,0.3);
+            z-index: 5;
+            pointer-events: none;
+            background: rgba(10, 20, 33, 0.7);
+            padding: 6px 14px;
+            border-radius: 8px;
         }
-
-        footer a {
+        #footer-fixed a {
             color: #ffcc00;
             text-decoration: none;
             font-weight: bold;
         }
-
-        footer a:hover {
+        #footer-fixed a:hover {
             text-decoration: underline;
         }
-
         /* Age warning overlay */
         #age-warning {
             position: fixed;
@@ -210,6 +231,8 @@
     </style>
 </head>
 <body>
+
+    <!-- Age verification overlay -->
     <div id="age-warning">
         <h2>18+ WARNING</h2>
         <p>
@@ -219,6 +242,9 @@
         <button id="confirm-18" class="age-btn">I'm older than 18</button>
         <button id="exit-under18" class="age-btn">I'm under 18</button>
     </div>
+
+    <!-- Highest score -->
+    <div id="high-score">Highest Score: 0</div>
 
     <div id="game-container">
         <main>
@@ -230,10 +256,22 @@
                 <span id="coins">Coins: 0</span>
             </div>
 
-            <div id="message">Which one has the higher score?</div>
+            <div id="message">Which one has the higher score? Click to guess!</div>
             <div id="game-area">
-                <div id="loading">Loading images...</div>
+                <div class="card-container">
+                    <div class="card" id="card-left">
+                        <div id="loading-left">Loading...</div>
+                    </div>
+                </div>
+                <div class="card-container">
+                    <div class="card" id="card-right">
+                        <div id="loading-right">Loading...</div>
+                    </div>
+                </div>
             </div>
+
+            <!-- Результат появляется под карточками -->
+            <div id="result-message"></div>
 
             <div id="sidebar">
                 <div id="powerups">
@@ -241,30 +279,34 @@
                     <button class="powerup-btn" id="powerup-reveal-both" disabled>Reveal Both<br><span class="cost">10 🪙</span></button>
                     <button class="powerup-btn" id="powerup-skip" disabled>Skip Pair<br><span class="cost">8 🪙</span></button>
                 </div>
-                <button id="new-game">New Game (Reset)</button>
             </div>
         </main>
+    </div>
 
-        <footer>
-            Developed by Kitsune</a>
-        </footer>
+    <!-- Фиксированный футер в правом нижнем углу -->
+    <div id="footer-fixed">
+        Developed by <a href="https://e621.net/users/YOUR_USER_ID_HERE" target="_blank">Kitsune</a>
     </div>
 
     <script>
         const API_BASE = 'https://e621.net/posts.json';
         const USER_AGENT = 'ScoreGuessGame/1.0 (by Kitsune on e621)';
         const MIN_SCORE = 1000;
-        const POSTS_PER_FETCH = 80;
-        const REVEAL_TIME_MS = 2200;
-        const STORAGE_KEY = 'e621-guess-game-coins';
+        const INITIAL_FETCH = 8;
+        const PREFETCH_COUNT = 4;
+        const REVEAL_PAUSE_MS = 2500;
 
-        // Age verification
+        const STORAGE_KEY_COINS = 'e621-guess-game-coins';
+        const STORAGE_KEY_HIGH_SCORE = 'e621-guess-game-high-score';
+        const STORAGE_KEY_AGE_CONFIRMED = 'e621-age-confirmed';
+
+        // Age verification (навсегда)
         const ageWarning = document.getElementById('age-warning');
         const gameContainer = document.getElementById('game-container');
         const confirm18 = document.getElementById('confirm-18');
         const exitUnder18 = document.getElementById('exit-under18');
 
-        if (sessionStorage.getItem('ageConfirmed') === 'true') {
+        if (localStorage.getItem(STORAGE_KEY_AGE_CONFIRMED) === 'true') {
             ageWarning.style.display = 'none';
             gameContainer.style.display = 'block';
         } else {
@@ -272,7 +314,7 @@
         }
 
         confirm18.addEventListener('click', () => {
-            sessionStorage.setItem('ageConfirmed', 'true');
+            localStorage.setItem(STORAGE_KEY_AGE_CONFIRMED, 'true');
             ageWarning.style.display = 'none';
             gameContainer.style.display = 'block';
             startGame();
@@ -280,42 +322,54 @@
 
         exitUnder18.addEventListener('click', () => {
             window.close();
-            // or: window.location.href = 'https://www.google.com';
         });
 
         // Game logic
         let score = 0;
-        let coins = parseInt(localStorage.getItem(STORAGE_KEY)) || 0;
+        let coins = parseInt(localStorage.getItem(STORAGE_KEY_COINS)) || 0;
+        let highScore = parseInt(localStorage.getItem(STORAGE_KEY_HIGH_SCORE)) || 0;
         let currentStreak = 0;
         let currentPair = [];
-        let cachedPosts = [];
+        let postCache = [];
+        let isLoadingNext = false;
+        let hasChosen = false;
 
         const scoreEl = document.getElementById('score');
         const coinsEl = document.getElementById('coins');
+        const highScoreEl = document.getElementById('high-score');
         const messageEl = document.getElementById('message');
+        const resultMessageEl = document.getElementById('result-message');
         const gameArea = document.getElementById('game-area');
-        const newGameBtn = document.getElementById('new-game');
 
         const puRevealOne  = document.getElementById('powerup-reveal-one');
         const puRevealBoth = document.getElementById('powerup-reveal-both');
         const puSkip       = document.getElementById('powerup-skip');
 
-        function saveCoins() {
-            localStorage.setItem(STORAGE_KEY, coins);
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY_COINS, coins);
+            localStorage.setItem(STORAGE_KEY_HIGH_SCORE, highScore);
         }
 
         function updateUI() {
             scoreEl.textContent = `Score: ${score}`;
             coinsEl.textContent = `Coins: ${coins}`;
+            highScoreEl.textContent = `Highest Score: ${highScore}`;
             puRevealOne.disabled  = coins < 5;
             puRevealBoth.disabled = coins < 10;
             puSkip.disabled       = coins < 8;
-            saveCoins();
+            saveData();
         }
 
-        async function fetchFreshPosts() {
+        function checkHighScore() {
+            if (score > highScore) {
+                highScore = score;
+                updateUI();
+            }
+        }
+
+        async function fetchPosts(count = PREFETCH_COUNT) {
             const tags = `score:>${MIN_SCORE} order:random`;
-            const url = `${API_BASE}?limit=${POSTS_PER_FETCH}&tags=${encodeURIComponent(tags)}`;
+            const url = `${API_BASE}?limit=${count}&tags=${encodeURIComponent(tags)}`;
 
             try {
                 const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
@@ -325,30 +379,46 @@
 
                 posts = posts.filter(post => {
                     const ext = post.file?.ext?.toLowerCase() || '';
-                    return ['jpg','jpeg','png'].includes(ext) && post.preview?.url && post.score?.total >= MIN_SCORE;
+                    const rating = post.rating?.toLowerCase() || '';
+                    return ['jpg','jpeg','png'].includes(ext) &&
+                           post.preview?.url &&
+                           post.score?.total >= MIN_SCORE &&
+                           rating !== 's';
                 });
 
                 return posts;
             } catch (err) {
-                messageEl.textContent = `Error: ${err.message}`;
+                console.error(err);
+                messageEl.textContent = `Error fetching: ${err.message}`;
                 return [];
             }
         }
 
-        async function getTwoPosts() {
-            if (cachedPosts.length >= 2) {
-                const idx1 = Math.floor(Math.random() * cachedPosts.length);
-                let a = cachedPosts.splice(idx1, 1)[0];
-                const idx2 = Math.floor(Math.random() * cachedPosts.length);
-                let b = cachedPosts.splice(idx2, 1)[0];
-                return [a, b];
+        async function prefetchMore() {
+            if (postCache.length < 6 && !isLoadingNext) {
+                isLoadingNext = true;
+                const newPosts = await fetchPosts(PREFETCH_COUNT);
+                postCache.push(...newPosts);
+                isLoadingNext = false;
+            }
+        }
+
+        async function getNextPair() {
+            while (postCache.length < 2) {
+                messageEl.textContent = 'Loading more images...';
+                await prefetchMore();
+                if (postCache.length === 0) return [];
             }
 
-            const newPosts = await fetchFreshPosts();
-            if (newPosts.length < 2) return [];
+            let a = postCache.shift();
+            let b = postCache.shift();
 
-            cachedPosts = [...cachedPosts, ...newPosts].slice(0, 150);
-            return getTwoPosts();
+            if (a.id === b.id && postCache.length >= 1) {
+                b = postCache.shift();
+            }
+
+            prefetchMore();
+            return [a, b];
         }
 
         function getImageUrl(post) {
@@ -371,26 +441,41 @@
 
             div.appendChild(img);
             div.appendChild(info);
+
             div.addEventListener('click', () => handleGuess(index));
+
             return div;
         }
 
         function showPair(pair) {
+            // Полностью очищаем старые карточки
             gameArea.innerHTML = '';
+
             currentPair = pair;
 
             pair.forEach((post, i) => {
-                gameArea.appendChild(createCard(post, i));
+                const container = document.createElement('div');
+                container.className = 'card-container';
+                container.appendChild(createCard(post, i));
+                gameArea.appendChild(container);
             });
 
-            messageEl.textContent = 'Which one has the higher score?';
-            messageEl.style.color = '#eee';
+            // Инструкция показывается только до первого выбора
+            if (!hasChosen) {
+                messageEl.textContent = 'Which one has the higher score? Click to guess!';
+                messageEl.style.color = '#eee';
+            } else {
+                messageEl.style.display = 'none';
+            }
+
+            resultMessageEl.textContent = ''; // очищаем результат от предыдущего раунда
         }
 
         function revealScores(indices = [0, 1]) {
             currentPair.forEach((post, i) => {
                 if (indices.includes(i)) {
-                    const card = gameArea.children[i];
+                    const container = gameArea.children[i];
+                    const card = container.querySelector('.card');
                     card.classList.add('revealed');
                     const info = card.querySelector('.info');
                     const artist = post.tags?.artist?.[0] || 'Unknown';
@@ -406,33 +491,63 @@
         function handleGuess(clickedIndex) {
             if (currentPair.length !== 2) return;
 
+            // После первого выбора скрываем инструкцию
+            if (!hasChosen) {
+                hasChosen = true;
+                messageEl.style.display = 'none';
+            }
+
             const left = currentPair[0];
             const right = currentPair[1];
             const higherIndex = left.score.total > right.score.total ? 0 : 1;
             const won = clickedIndex === higherIndex;
 
+            // Показываем результат ПОД карточками
             if (won) {
                 score += 1;
                 currentStreak += 1;
-                messageEl.textContent = 'Correct! +1 point';
-                messageEl.style.color = '#4caf50';
+                resultMessageEl.textContent = 'Correct! +1 point';
+                resultMessageEl.style.color = '#4caf50';
+                checkHighScore();
             } else {
                 coins += currentStreak;
-                messageEl.innerHTML = `Wrong! Score reset<br>+${currentStreak} coins awarded`;
-                messageEl.style.color = '#f44336';
+                resultMessageEl.innerHTML = `Wrong! Score reset<br>+${currentStreak} coins awarded`;
+                resultMessageEl.style.color = '#f44336';
                 currentStreak = 0;
                 score = 0;
-                updateUI();
             }
 
             updateUI();
             revealScores([0, 1]);
 
-            gameArea.children[higherIndex].style.borderColor = '#4caf50';
-            gameArea.children[1 - higherIndex].style.borderColor = '#f44336';
+            const higherContainer = gameArea.children[higherIndex];
+            const lowerContainer = gameArea.children[1 - higherIndex];
+            const higherCard = higherContainer.querySelector('.card');
+            const lowerCard = lowerContainer.querySelector('.card');
+
+            higherCard.classList.add('highlighted');
+            lowerCard.classList.add('dimmed');
+
+            higherCard.style.borderColor = '#4caf50';
+            lowerCard.style.borderColor = '#f44336';
 
             currentPair = [];
-            setTimeout(loadNextPair, REVEAL_TIME_MS);
+
+            setTimeout(async () => {
+                higherCard.classList.remove('highlighted');
+                lowerCard.classList.remove('dimmed');
+
+                resultMessageEl.textContent = ''; // очищаем результат перед новой парой
+
+                const nextPair = await getNextPair();
+                if (nextPair.length === 2) {
+                    if (Math.random() < 0.5) nextPair.reverse();
+                    showPair(nextPair);
+                } else {
+                    resultMessageEl.innerHTML = 'No more images available<br>Refresh to play again';
+                    gameArea.innerHTML = '<div id="loading">No images left</div>';
+                }
+            }, REVEAL_PAUSE_MS);
         }
 
         puRevealOne.onclick = () => {
@@ -441,8 +556,8 @@
             updateUI();
             const rand = Math.random() < 0.5 ? 0 : 1;
             revealScores([rand]);
-            messageEl.textContent = 'Revealed one score';
-            messageEl.style.color = '#ffcc00';
+            resultMessageEl.textContent = 'Revealed one score';
+            resultMessageEl.style.color = '#ffcc00';
         };
 
         puRevealBoth.onclick = () => {
@@ -450,52 +565,58 @@
             coins -= 10;
             updateUI();
             revealScores([0, 1]);
-            messageEl.textContent = 'Revealed both scores';
-            messageEl.style.color = '#ffcc00';
+            resultMessageEl.textContent = 'Revealed both scores';
+            resultMessageEl.style.color = '#ffcc00';
         };
 
         puSkip.onclick = () => {
             if (coins < 8 || currentPair.length !== 2) return;
             coins -= 8;
             updateUI();
-            messageEl.textContent = 'Pair skipped → loading new...';
-            messageEl.style.color = '#ffcc00';
-            setTimeout(loadNextPair, 900);
+            resultMessageEl.textContent = 'Pair skipped → loading new...';
+            resultMessageEl.style.color = '#ffcc00';
+            setTimeout(async () => {
+                const nextPair = await getNextPair();
+                if (nextPair.length === 2) {
+                    if (Math.random() < 0.5) nextPair.reverse();
+                    showPair(nextPair);
+                }
+            }, 900);
         };
-
-        async function loadNextPair() {
-            messageEl.textContent = 'Loading next pair...';
-            const pair = await getTwoPosts();
-
-            if (pair.length === 2 && pair[0].id !== pair[1].id) {
-                if (Math.random() < 0.5) pair.reverse();
-                showPair(pair);
-            } else {
-                messageEl.textContent = 'Not enough posts — try New Game';
-            }
-        }
 
         async function startGame() {
             score = 0;
             currentStreak = 0;
+            postCache = [];
+            hasChosen = false;
+            messageEl.style.display = 'block';
+            resultMessageEl.textContent = '';
             updateUI();
-            cachedPosts = [];
-            messageEl.textContent = 'Fetching images...';
-            gameArea.innerHTML = '<div id="loading">Loading...</div>';
-            await loadNextPair();
-        }
+            messageEl.textContent = 'Fetching initial images...';
+            gameArea.innerHTML = '<div class="card-container"><div class="card"><div id="loading">Loading...</div></div></div><div class="card-container"><div class="card"><div id="loading">Loading...</div></div></div>';
 
-        newGameBtn.addEventListener('click', () => {
-            coins += currentStreak;
-            currentStreak = 0;
-            updateUI();
-            startGame();
-        });
+            const initialPosts = await fetchPosts(INITIAL_FETCH);
+            postCache.push(...initialPosts);
+
+            const firstPair = await getNextPair();
+            if (firstPair.length === 2) {
+                if (Math.random() < 0.5) firstPair.reverse();
+                showPair(firstPair);
+                prefetchMore();
+            } else {
+                messageEl.textContent = 'Not enough valid posts — try again later';
+            }
+        }
 
         // Initial start after age confirmation
-        if (sessionStorage.getItem('ageConfirmed') === 'true') {
+        if (localStorage.getItem(STORAGE_KEY_AGE_CONFIRMED) === 'true') {
             startGame();
         }
+
+        // Показываем рекорд при загрузке
+        document.addEventListener('DOMContentLoaded', () => {
+            highScoreEl.textContent = `Highest Score: ${highScore}`;
+        });
     </script>
 </body>
 </html>
