@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>e621 Score Guessing Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0a1421;
+            color: #eee;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #ffcc00;
+            margin: 15px 0 10px;
+            font-size: 2.6em;
+        }
+        #hud {
+            font-size: 1.9em;
+            margin: 10px 0 25px;
+        }
+        #score { color: #4caf50; }
+        #coins  { color: #ffd700; }
+        #game-container {
+            max-width: 1250px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        #game-area {
+            display: flex;
+            justify-content: center;
+            gap: 90px;
+            margin: 20px auto 50px;
+            width: 100%;
+        }
+        .card {
+            width: 520px;
+            background: #1a1a1a;
+            border: 4px solid #444;
+            border-radius: 20px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.8);
+        }
+        .card:hover {
+            transform: scale(1.03);
+            border-color: #ffcc00;
+        }
+        .card img {
+            width: 100%;
+            height: auto;
+            display: block;
+            background: #000;
+        }
+        .info {
+            padding: 14px;
+            font-size: 1.3em;
+            text-align: center;
+            background: rgba(0,0,0,0.75);
+            display: none;
+        }
+        .revealed .info {
+            display: block;
+        }
+        #message {
+            font-size: 2.1em;
+            margin: 15px 0 30px;
+            min-height: 2.4em;
+        }
+        #sidebar {
+            position: fixed;
+            top: 140px;
+            right: 15px;
+            width: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 18px;
+            z-index: 10;
+        }
+        #powerups {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .powerup-btn {
+            width: 160px;
+            height: 68px;
+            font-size: 1em;
+            font-weight: bold;
+            color: white;
+            background: #3c3c3c;
+            border: 3px solid #666;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 6px;
+        }
+        .powerup-btn:hover:not(:disabled) {
+            transform: scale(1.08);
+            border-color: #aaa;
+        }
+        .powerup-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .powerup-btn .cost {
+            font-size: 0.9em;
+            color: #ffcc00;
+        }
+        #new-game {
+            padding: 16px 40px;
+            font-size: 1.4em;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+        }
+        #new-game:hover {
+            background: #0062cc;
+        }
+
+        footer {
+            margin-top: auto;
+            padding: 20px 0;
+            font-size: 1.1em;
+            color: #aaa;
+            text-align: center;
+            border-top: 1px solid #333;
+            background: rgba(0,0,0,0.3);
+        }
+
+        footer a {
+            color: #ffcc00;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Age warning overlay */
+        #age-warning {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.92);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            text-align: center;
+        }
+        #age-warning h2 {
+            color: #ff4444;
+            font-size: 2.8em;
+            margin-bottom: 20px;
+        }
+        #age-warning p {
+            font-size: 1.4em;
+            max-width: 700px;
+            margin: 0 auto 40px;
+            line-height: 1.5;
+        }
+        .age-btn {
+            padding: 18px 60px;
+            font-size: 1.5em;
+            margin: 15px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #confirm-18 {
+            background: #28a745;
+            color: white;
+        }
+        #confirm-18:hover {
+            background: #218838;
+        }
+        #exit-under18 {
+            background: #dc3545;
+            color: white;
+        }
+        #exit-under18:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div id="age-warning">
+        <h2>18+ WARNING</h2>
+        <p>
+            This website contains explicit adult content.<br>
+            By continuing you confirm that you are at least 18 years old<br>
+        </p>
+        <button id="confirm-18" class="age-btn">I'm older than 18</button>
+        <button id="exit-under18" class="age-btn">I'm under 18</button>
+    </div>
+
+    <div id="game-container">
+        <main>
+            <h1>e621 Score Guessing Game</h1>
+
+            <div id="hud">
+                <span id="score">Score: 0</span>  
+                <span style="margin: 0 25px;">•</span>  
+                <span id="coins">Coins: 0</span>
+            </div>
+
+            <div id="message">Which one has the higher score?</div>
+            <div id="game-area">
+                <div id="loading">Loading images...</div>
+            </div>
+
+            <div id="sidebar">
+                <div id="powerups">
+                    <button class="powerup-btn" id="powerup-reveal-one" disabled>Reveal 1<br><span class="cost">5 🪙</span></button>
+                    <button class="powerup-btn" id="powerup-reveal-both" disabled>Reveal Both<br><span class="cost">10 🪙</span></button>
+                    <button class="powerup-btn" id="powerup-skip" disabled>Skip Pair<br><span class="cost">8 🪙</span></button>
+                </div>
+                <button id="new-game">New Game (Reset)</button>
+            </div>
+        </main>
+
+        <footer>
+            Developed by Kitsune</a>
+        </footer>
+    </div>
+
+    <script>
+        const API_BASE = 'https://e621.net/posts.json';
+        const USER_AGENT = 'ScoreGuessGame/1.0 (by Kitsune on e621)';
+        const MIN_SCORE = 1000;
+        const POSTS_PER_FETCH = 80;
+        const REVEAL_TIME_MS = 2200;
+        const STORAGE_KEY = 'e621-guess-game-coins';
+
+        // Age verification
+        const ageWarning = document.getElementById('age-warning');
+        const gameContainer = document.getElementById('game-container');
+        const confirm18 = document.getElementById('confirm-18');
+        const exitUnder18 = document.getElementById('exit-under18');
+
+        if (sessionStorage.getItem('ageConfirmed') === 'true') {
+            ageWarning.style.display = 'none';
+            gameContainer.style.display = 'block';
+        } else {
+            gameContainer.style.display = 'none';
+        }
+
+        confirm18.addEventListener('click', () => {
+            sessionStorage.setItem('ageConfirmed', 'true');
+            ageWarning.style.display = 'none';
+            gameContainer.style.display = 'block';
+            startGame();
+        });
+
+        exitUnder18.addEventListener('click', () => {
+            window.close();
+            // or: window.location.href = 'https://www.google.com';
+        });
+
+        // Game logic
+        let score = 0;
+        let coins = parseInt(localStorage.getItem(STORAGE_KEY)) || 0;
+        let currentStreak = 0;
+        let currentPair = [];
+        let cachedPosts = [];
+
+        const scoreEl = document.getElementById('score');
+        const coinsEl = document.getElementById('coins');
+        const messageEl = document.getElementById('message');
+        const gameArea = document.getElementById('game-area');
+        const newGameBtn = document.getElementById('new-game');
+
+        const puRevealOne  = document.getElementById('powerup-reveal-one');
+        const puRevealBoth = document.getElementById('powerup-reveal-both');
+        const puSkip       = document.getElementById('powerup-skip');
+
+        function saveCoins() {
+            localStorage.setItem(STORAGE_KEY, coins);
+        }
+
+        function updateUI() {
+            scoreEl.textContent = `Score: ${score}`;
+            coinsEl.textContent = `Coins: ${coins}`;
+            puRevealOne.disabled  = coins < 5;
+            puRevealBoth.disabled = coins < 10;
+            puSkip.disabled       = coins < 8;
+            saveCoins();
+        }
+
+        async function fetchFreshPosts() {
+            const tags = `score:>${MIN_SCORE} order:random`;
+            const url = `${API_BASE}?limit=${POSTS_PER_FETCH}&tags=${encodeURIComponent(tags)}`;
+
+            try {
+                const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
+                if (!res.ok) throw new Error(`API error: ${res.status}`);
+                const data = await res.json();
+                let posts = data.posts || [];
+
+                posts = posts.filter(post => {
+                    const ext = post.file?.ext?.toLowerCase() || '';
+                    return ['jpg','jpeg','png'].includes(ext) && post.preview?.url && post.score?.total >= MIN_SCORE;
+                });
+
+                return posts;
+            } catch (err) {
+                messageEl.textContent = `Error: ${err.message}`;
+                return [];
+            }
+        }
+
+        async function getTwoPosts() {
+            if (cachedPosts.length >= 2) {
+                const idx1 = Math.floor(Math.random() * cachedPosts.length);
+                let a = cachedPosts.splice(idx1, 1)[0];
+                const idx2 = Math.floor(Math.random() * cachedPosts.length);
+                let b = cachedPosts.splice(idx2, 1)[0];
+                return [a, b];
+            }
+
+            const newPosts = await fetchFreshPosts();
+            if (newPosts.length < 2) return [];
+
+            cachedPosts = [...cachedPosts, ...newPosts].slice(0, 150);
+            return getTwoPosts();
+        }
+
+        function getImageUrl(post) {
+            return post.preview?.url || '';
+        }
+
+        function createCard(post, index) {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.dataset.index = index;
+            div.style.borderColor = '#444';
+
+            const img = document.createElement('img');
+            img.src = getImageUrl(post);
+            img.alt = `Post ${post.id}`;
+            img.loading = 'lazy';
+
+            const info = document.createElement('div');
+            info.className = 'info';
+
+            div.appendChild(img);
+            div.appendChild(info);
+            div.addEventListener('click', () => handleGuess(index));
+            return div;
+        }
+
+        function showPair(pair) {
+            gameArea.innerHTML = '';
+            currentPair = pair;
+
+            pair.forEach((post, i) => {
+                gameArea.appendChild(createCard(post, i));
+            });
+
+            messageEl.textContent = 'Which one has the higher score?';
+            messageEl.style.color = '#eee';
+        }
+
+        function revealScores(indices = [0, 1]) {
+            currentPair.forEach((post, i) => {
+                if (indices.includes(i)) {
+                    const card = gameArea.children[i];
+                    card.classList.add('revealed');
+                    const info = card.querySelector('.info');
+                    const artist = post.tags?.artist?.[0] || 'Unknown';
+                    info.innerHTML = `
+                        <strong>Score: ${post.score.total}</strong><br>
+                        Artist: ${artist}<br>
+                        Rating: ${post.rating?.toUpperCase() || '?'} • ID: ${post.id}
+                    `;
+                }
+            });
+        }
+
+        function handleGuess(clickedIndex) {
+            if (currentPair.length !== 2) return;
+
+            const left = currentPair[0];
+            const right = currentPair[1];
+            const higherIndex = left.score.total > right.score.total ? 0 : 1;
+            const won = clickedIndex === higherIndex;
+
+            if (won) {
+                score += 1;
+                currentStreak += 1;
+                messageEl.textContent = 'Correct! +1 point';
+                messageEl.style.color = '#4caf50';
+            } else {
+                coins += currentStreak;
+                messageEl.innerHTML = `Wrong! Score reset<br>+${currentStreak} coins awarded`;
+                messageEl.style.color = '#f44336';
+                currentStreak = 0;
+                score = 0;
+                updateUI();
+            }
+
+            updateUI();
+            revealScores([0, 1]);
+
+            gameArea.children[higherIndex].style.borderColor = '#4caf50';
+            gameArea.children[1 - higherIndex].style.borderColor = '#f44336';
+
+            currentPair = [];
+            setTimeout(loadNextPair, REVEAL_TIME_MS);
+        }
+
+        puRevealOne.onclick = () => {
+            if (coins < 5 || currentPair.length !== 2) return;
+            coins -= 5;
+            updateUI();
+            const rand = Math.random() < 0.5 ? 0 : 1;
+            revealScores([rand]);
+            messageEl.textContent = 'Revealed one score';
+            messageEl.style.color = '#ffcc00';
+        };
+
+        puRevealBoth.onclick = () => {
+            if (coins < 10 || currentPair.length !== 2) return;
+            coins -= 10;
+            updateUI();
+            revealScores([0, 1]);
+            messageEl.textContent = 'Revealed both scores';
+            messageEl.style.color = '#ffcc00';
+        };
+
+        puSkip.onclick = () => {
+            if (coins < 8 || currentPair.length !== 2) return;
+            coins -= 8;
+            updateUI();
+            messageEl.textContent = 'Pair skipped → loading new...';
+            messageEl.style.color = '#ffcc00';
+            setTimeout(loadNextPair, 900);
+        };
+
+        async function loadNextPair() {
+            messageEl.textContent = 'Loading next pair...';
+            const pair = await getTwoPosts();
+
+            if (pair.length === 2 && pair[0].id !== pair[1].id) {
+                if (Math.random() < 0.5) pair.reverse();
+                showPair(pair);
+            } else {
+                messageEl.textContent = 'Not enough posts — try New Game';
+            }
+        }
+
+        async function startGame() {
+            score = 0;
+            currentStreak = 0;
+            updateUI();
+            cachedPosts = [];
+            messageEl.textContent = 'Fetching images...';
+            gameArea.innerHTML = '<div id="loading">Loading...</div>';
+            await loadNextPair();
+        }
+
+        newGameBtn.addEventListener('click', () => {
+            coins += currentStreak;
+            currentStreak = 0;
+            updateUI();
+            startGame();
+        });
+
+        // Initial start after age confirmation
+        if (sessionStorage.getItem('ageConfirmed') === 'true') {
+            startGame();
+        }
+    </script>
+</body>
+</html>
