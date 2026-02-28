@@ -34,10 +34,11 @@
         #game-area {
             display: flex;
             justify-content: center;
-            gap: 90px;
-            margin: 20px auto 120px;
+            gap: 60px;
+            margin: 20px auto;
             width: 100%;
             min-height: 700px;
+            flex-wrap: wrap;
         }
         .card-container {
             width: 520px;
@@ -106,26 +107,37 @@
         }
         #result-message {
             font-size: 1.8em;
-            margin: 20px 0;
+            margin: 30px 0 40px;
             min-height: 60px;
             font-weight: bold;
         }
-        #sidebar {
-            position: fixed;
-            top: 140px;
-            right: 15px;
-            width: 240px;
+
+        /* ────────────────────────────────────────
+           Controls placed BELOW the cards — centered
+        ──────────────────────────────────────── */
+        #controls-below {
+            max-width: 1100px;
+            margin: 40px auto 80px;
+            width: 100%;
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
-            gap: 20px;
-            z-index: 10;
+            align-items: center;
+            gap: 32px;
+            padding: 0 20px;
+            box-sizing: border-box;
         }
-        #powerups { display: flex; flex-direction: column; gap: 16px; }
+
+        #powerups {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 24px;
+        }
+
         .powerup-btn {
-            width: 180px;
-            height: 80px;
-            font-size: 1.1em;
+            width: 200px;
+            height: 90px;
+            font-size: 1.25em;
             font-weight: bold;
             color: white;
             background: linear-gradient(135deg, #4a4a4a, #2a2a2a);
@@ -138,7 +150,7 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 8px;
+            padding: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.6);
         }
         .powerup-btn:hover:not(:disabled) {
@@ -155,60 +167,70 @@
         .powerup-btn .cost {
             font-size: 0.95em;
             color: #ffcc00;
-            margin-top: 4px;
+            margin-top: 6px;
         }
-        #filters-sidebar {
+
+        #filters-below {
             background: rgba(26,26,26,0.8);
             border: 2px solid #444;
             border-radius: 16px;
-            padding: 16px;
+            padding: 20px;
             width: 100%;
+            max-width: 520px;
             box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
+
         #gender-switch {
             display: flex;
             background: #1a1a1a;
             border-radius: 20px;
             border: 2px solid #444;
             overflow: hidden;
-            margin-bottom: 16px;
+            width: 100%;
         }
         .gender-option {
             flex: 1;
-            padding: 10px;
+            padding: 12px;
             cursor: pointer;
             transition: background 0.3s, color 0.3s;
             text-align: center;
-            font-size: 1.2em;
+            font-size: 1.3em;
         }
         .gender-option.active {
             background: #ffcc00;
             color: #000;
         }
+
         #tag-search {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 12px;
         }
         #tag-input {
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
             border: 1px solid #444;
             background: #2a2a2a;
             color: #eee;
+            font-size: 1.1em;
         }
         .tag-btn {
-            padding: 10px;
+            padding: 12px;
             background: #4a4a4a;
             border: none;
             border-radius: 8px;
             color: #eee;
             cursor: pointer;
             transition: background 0.3s;
+            font-size: 1.1em;
         }
         .tag-btn:hover {
             background: #5a5a5a;
         }
+
         #footer-fixed {
             position: fixed;
             bottom: 10px;
@@ -223,7 +245,7 @@
         }
         #footer-fixed a { color: #ffcc00; text-decoration: none; font-weight: bold; }
         #footer-fixed a:hover { text-decoration: underline; }
-        
+
         #age-warning {
             position: fixed;
             inset: 0;
@@ -260,7 +282,9 @@
         <button id="confirm-18" class="age-btn">I'm older than 18</button>
         <button id="exit-under18" class="age-btn">I'm under 18</button>
     </div>
+
     <div id="high-score">Highest Score: 0</div>
+
     <div id="game-container">
         <main>
             <h1>e621 Score Guessing Game</h1>
@@ -271,13 +295,15 @@
             </div>
             <div id="message">Which one has the higher score? Click to guess!</div>
             <div id="game-area"></div>
-            <div id="result-message"></div>
-            <div id="sidebar">
+
+            <!-- Controls moved here – below the cards, centered -->
+            <div id="controls-below">
                 <div id="powerups">
                     <button class="powerup-btn" id="powerup-reveal-one" disabled>Reveal 1<br><span class="cost">5 🪙</span></button>
                     <button class="powerup-btn" id="powerup-reveal-both" disabled>Reveal Both<br><span class="cost">10 🪙</span></button>
                 </div>
-                <div id="filters-sidebar">
+
+                <div id="filters-below">
                     <div id="gender-switch">
                         <span class="gender-option" data-gender="F">♀</span>
                         <span class="gender-option" data-gender="ALL">ALL</span>
@@ -285,15 +311,20 @@
                     </div>
                     <div id="tag-search">
                         <input id="tag-input" type="text" placeholder="Enter e621 tag">
-                        <button id="apply-tag" class="tag-btn">Apply</button>
-                        <button id="clear-tag" class="tag-btn">Clear</button>
+                        <div style="display: flex; gap: 12px; width: 100%;">
+                            <button id="apply-tag" class="tag-btn" style="flex:1;">Apply</button>
+                            <button id="clear-tag" class="tag-btn" style="flex:1;">Clear</button>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <div id="result-message"></div>
         </main>
     </div>
+
     <div id="footer-fixed">
-        Developed by Kitsune</a>
+        Developed by Kitsune
     </div>
 
     <script>
@@ -385,7 +416,6 @@
         async function fetchPosts(count = PREFETCH_COUNT) {
             const tags = `score:>${MIN_SCORE} order:random ${genderTag} ${userTag}`.trim();
             const url = `${API_BASE}?limit=${count}&tags=${encodeURIComponent(tags)}`;
-
             try {
                 const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
                 if (!res.ok) throw new Error(`API error: ${res.status}`);
@@ -427,12 +457,10 @@
                 }
                 let a = postCache.shift();
                 let b = postCache.shift();
-
                 while (a?.id === b?.id && postCache.length >= 1) {
                     b = postCache.shift();
                 }
                 if (!a || !b) continue;
-
                 const diff = Math.abs(a.score.total - b.score.total);
                 if (diff >= MIN_SCORE_DIFFERENCE) {
                     prefetchMore();
@@ -475,7 +503,6 @@
                 gameArea.appendChild(container);
             });
 
-            
             if (!hasSeenInstruction && !hasChosen) {
                 messageEl.textContent = 'Which one has the higher score? Click to guess!';
                 messageEl.style.color = '#eee';
@@ -484,7 +511,6 @@
                 messageEl.textContent = '';
                 messageEl.style.display = 'none';
             }
-
             resultMessageEl.textContent = '';
         }
 
@@ -497,13 +523,10 @@
 
         function handleGuess(clickedIndex) {
             if (currentPair.length !== 2) return;
-
             if (!hasChosen) {
                 hasChosen = true;
                 messageEl.textContent = '';
                 messageEl.style.display = 'none';
-
-                
                 if (!hasSeenInstruction) {
                     localStorage.setItem(STORAGE_KEY_SEEN_INSTRUCTION, 'true');
                 }
