@@ -114,11 +114,11 @@
             position: fixed;
             top: 140px;
             right: 15px;
-            width: 220px;
+            width: 240px;
             display: flex;
             flex-direction: column;
             align-items: flex-end;
-            gap: 16px;
+            gap: 20px;
             z-index: 10;
         }
         #powerups { display: flex; flex-direction: column; gap: 16px; }
@@ -157,6 +157,58 @@
             color: #ffcc00;
             margin-top: 4px;
         }
+        #filters-sidebar {
+            background: rgba(26,26,26,0.8);
+            border: 2px solid #444;
+            border-radius: 16px;
+            padding: 16px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        #gender-switch {
+            display: flex;
+            background: #1a1a1a;
+            border-radius: 20px;
+            border: 2px solid #444;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        .gender-option {
+            flex: 1;
+            padding: 10px;
+            cursor: pointer;
+            transition: background 0.3s, color 0.3s;
+            text-align: center;
+            font-size: 1.2em;
+        }
+        .gender-option.active {
+            background: #ffcc00;
+            color: #000;
+        }
+        #tag-search {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        #tag-input {
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background: #2a2a2a;
+            color: #eee;
+        }
+        .tag-btn {
+            padding: 10px;
+            background: #4a4a4a;
+            border: none;
+            border-radius: 8px;
+            color: #eee;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .tag-btn:hover {
+            background: #5a5a5a;
+        }
         #footer-fixed {
             position: fixed;
             bottom: 10px;
@@ -171,8 +223,7 @@
         }
         #footer-fixed a { color: #ffcc00; text-decoration: none; font-weight: bold; }
         #footer-fixed a:hover { text-decoration: underline; }
-
-        /* Age warning */
+        
         #age-warning {
             position: fixed;
             inset: 0;
@@ -203,16 +254,13 @@
     </style>
 </head>
 <body>
-
     <div id="age-warning">
         <h2>18+ WARNING</h2>
         <p>This website contains explicit adult content.<br>By continuing you confirm that you are at least 18 years old</p>
         <button id="confirm-18" class="age-btn">I'm older than 18</button>
         <button id="exit-under18" class="age-btn">I'm under 18</button>
     </div>
-
     <div id="high-score">Highest Score: 0</div>
-
     <div id="game-container">
         <main>
             <h1>e621 Score Guessing Game</h1>
@@ -224,34 +272,44 @@
             <div id="message">Which one has the higher score? Click to guess!</div>
             <div id="game-area"></div>
             <div id="result-message"></div>
-
             <div id="sidebar">
                 <div id="powerups">
                     <button class="powerup-btn" id="powerup-reveal-one" disabled>Reveal 1<br><span class="cost">5 🪙</span></button>
                     <button class="powerup-btn" id="powerup-reveal-both" disabled>Reveal Both<br><span class="cost">10 🪙</span></button>
-                    <button class="powerup-btn" id="powerup-skip" disabled>Skip Pair<br><span class="cost">8 🪙</span></button>
+                </div>
+                <div id="filters-sidebar">
+                    <div id="gender-switch">
+                        <span class="gender-option" data-gender="F">♀</span>
+                        <span class="gender-option" data-gender="ALL">ALL</span>
+                        <span class="gender-option" data-gender="M">♂</span>
+                    </div>
+                    <div id="tag-search">
+                        <input id="tag-input" type="text" placeholder="Enter e621 tag">
+                        <button id="apply-tag" class="tag-btn">Apply</button>
+                        <button id="clear-tag" class="tag-btn">Clear</button>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
-
     <div id="footer-fixed">
-        Developed by <a href="https://e621.net/users/YOUR_USER_ID_HERE" target="_blank">Kitsune</a>
+        Developed by Kitsune</a>
     </div>
 
     <script>
         const API_BASE = 'https://e621.net/posts.json';
+        const TAG_API_BASE = 'https://e621.net/tags.json';
         const USER_AGENT = 'ScoreGuessGame/1.0 (by Kitsune on e621)';
-        const MIN_SCORE = 1000;
-        const MIN_SCORE_DIFFERENCE = 200;
-        const INITIAL_FETCH = 12;          
+        const MIN_SCORE = 200;
+        const MIN_SCORE_DIFFERENCE = 100;
+        const INITIAL_FETCH = 12;
         const PREFETCH_COUNT = 6;
         const REVEAL_PAUSE_MS = 2500;
         const MAX_PAIR_ATTEMPTS = 30;
-
         const STORAGE_KEY_COINS = 'e621-guess-game-coins';
         const STORAGE_KEY_HIGH_SCORE = 'e621-guess-game-high-score';
         const STORAGE_KEY_AGE_CONFIRMED = 'e621-age-confirmed';
+        const STORAGE_KEY_SEEN_INSTRUCTION = 'e621-guess-game-seen-instruction';
 
         // Age verification
         const ageWarning = document.getElementById('age-warning');
@@ -284,6 +342,9 @@
         let postCache = [];
         let isLoadingNext = false;
         let hasChosen = false;
+        let genderTag = '';
+        let userTag = '';
+        let currentGender = 'ALL';
 
         const scoreEl = document.getElementById('score');
         const coinsEl = document.getElementById('coins');
@@ -293,7 +354,12 @@
         const gameArea = document.getElementById('game-area');
         const puRevealOne = document.getElementById('powerup-reveal-one');
         const puRevealBoth = document.getElementById('powerup-reveal-both');
-        const puSkip = document.getElementById('powerup-skip');
+        const genderOptions = document.querySelectorAll('.gender-option');
+        const tagInput = document.getElementById('tag-input');
+        const applyTagBtn = document.getElementById('apply-tag');
+        const clearTagBtn = document.getElementById('clear-tag');
+
+        const hasSeenInstruction = localStorage.getItem(STORAGE_KEY_SEEN_INSTRUCTION) === 'true';
 
         function saveData() {
             localStorage.setItem(STORAGE_KEY_COINS, coins);
@@ -306,7 +372,6 @@
             highScoreEl.textContent = `Highest Score: ${highScore}`;
             puRevealOne.disabled = coins < 5;
             puRevealBoth.disabled = coins < 10;
-            puSkip.disabled = coins < 8;
             saveData();
         }
 
@@ -318,8 +383,9 @@
         }
 
         async function fetchPosts(count = PREFETCH_COUNT) {
-            const tags = `score:>${MIN_SCORE} order:random`;
+            const tags = `score:>${MIN_SCORE} order:random ${genderTag} ${userTag}`.trim();
             const url = `${API_BASE}?limit=${count}&tags=${encodeURIComponent(tags)}`;
+
             try {
                 const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
                 if (!res.ok) throw new Error(`API error: ${res.status}`);
@@ -342,7 +408,7 @@
         }
 
         async function prefetchMore() {
-            if (postCache.length < 10 && !isLoadingNext) {  // чуть больше кэша
+            if (postCache.length < 10 && !isLoadingNext) {
                 isLoadingNext = true;
                 const newPosts = await fetchPosts(PREFETCH_COUNT);
                 postCache.push(...newPosts);
@@ -352,37 +418,28 @@
 
         async function getNextPair() {
             let attempts = 0;
-
             while (attempts < MAX_PAIR_ATTEMPTS) {
                 attempts++;
-
                 while (postCache.length < 2) {
                     messageEl.textContent = 'Loading more images...';
                     await prefetchMore();
                     if (postCache.length === 0) return [];
                 }
-
                 let a = postCache.shift();
                 let b = postCache.shift();
 
-                
                 while (a?.id === b?.id && postCache.length >= 1) {
                     b = postCache.shift();
                 }
-
                 if (!a || !b) continue;
 
                 const diff = Math.abs(a.score.total - b.score.total);
-
                 if (diff >= MIN_SCORE_DIFFERENCE) {
                     prefetchMore();
                     return [a, b];
                 }
-
-               
             }
-
-            messageEl.textContent = 'Не удалось найти пару с достаточной разницей в скоре...';
+            messageEl.textContent = 'Could not find a pair with sufficient score difference...';
             return [];
         }
 
@@ -395,19 +452,15 @@
             div.className = 'card';
             div.dataset.index = index;
             div.style.borderColor = '#444';
-
             const img = document.createElement('img');
             img.src = getImageUrl(post);
             img.alt = `Post ${post.id}`;
             img.loading = 'lazy';
-
             const scoreOverlay = document.createElement('div');
             scoreOverlay.className = 'score-overlay';
             scoreOverlay.textContent = `Score: ${post.score.total}`;
-
             div.appendChild(img);
             div.appendChild(scoreOverlay);
-
             div.addEventListener('click', () => handleGuess(index));
             return div;
         }
@@ -415,7 +468,6 @@
         function showPair(pair) {
             gameArea.innerHTML = '';
             currentPair = pair;
-
             pair.forEach((post, i) => {
                 const container = document.createElement('div');
                 container.className = 'card-container';
@@ -423,12 +475,16 @@
                 gameArea.appendChild(container);
             });
 
-            if (!hasChosen) {
+            
+            if (!hasSeenInstruction && !hasChosen) {
                 messageEl.textContent = 'Which one has the higher score? Click to guess!';
                 messageEl.style.color = '#eee';
+                messageEl.style.display = 'block';
             } else {
+                messageEl.textContent = '';
                 messageEl.style.display = 'none';
             }
+
             resultMessageEl.textContent = '';
         }
 
@@ -444,7 +500,13 @@
 
             if (!hasChosen) {
                 hasChosen = true;
+                messageEl.textContent = '';
                 messageEl.style.display = 'none';
+
+                
+                if (!hasSeenInstruction) {
+                    localStorage.setItem(STORAGE_KEY_SEEN_INSTRUCTION, 'true');
+                }
             }
 
             const left = currentPair[0];
@@ -467,19 +529,18 @@
             }
 
             updateUI();
-
             revealScore(0);
             revealScore(1);
 
             const higherContainer = gameArea.children[higherIndex];
-            const lowerContainer  = gameArea.children[1 - higherIndex];
+            const lowerContainer = gameArea.children[1 - higherIndex];
             const higherCard = higherContainer.querySelector('.card');
-            const lowerCard  = lowerContainer.querySelector('.card');
+            const lowerCard = lowerContainer.querySelector('.card');
 
             higherCard.classList.add('highlighted');
             lowerCard.classList.add('dimmed');
             higherCard.style.borderColor = '#4caf50';
-            lowerCard.style.borderColor  = '#f44336';
+            lowerCard.style.borderColor = '#f44336';
 
             currentPair = [];
 
@@ -487,18 +548,9 @@
                 higherCard.classList.remove('highlighted');
                 lowerCard.classList.remove('dimmed');
                 higherCard.style.borderColor = '#444';
-                lowerCard.style.borderColor  = '#444';
-
+                lowerCard.style.borderColor = '#444';
                 resultMessageEl.textContent = '';
-
-                const nextPair = await getNextPair();
-                if (nextPair.length === 2) {
-                    if (Math.random() < 0.5) nextPair.reverse();
-                    showPair(nextPair);
-                } else {
-                    resultMessageEl.innerHTML = 'No more suitable images available<br>Refresh to play again';
-                    gameArea.innerHTML = '<div id="loading">No images left</div>';
-                }
+                await loadNextPair();
             }, REVEAL_PAUSE_MS);
         }
 
@@ -522,46 +574,110 @@
             resultMessageEl.style.color = '#ffcc00';
         };
 
-        puSkip.onclick = () => {
-            if (coins < 8 || currentPair.length !== 2) return;
-            coins -= 8;
-            updateUI();
-            resultMessageEl.textContent = 'Pair skipped → loading new...';
-            resultMessageEl.style.color = '#ffcc00';
-            setTimeout(async () => {
-                const nextPair = await getNextPair();
-                if (nextPair.length === 2) {
-                    if (Math.random() < 0.5) nextPair.reverse();
-                    showPair(nextPair);
-                }
-            }, 900);
-        };
+        function updateGenderTag() {
+            if (currentGender === 'ALL') {
+                genderTag = '';
+            } else if (currentGender === 'M') {
+                genderTag = '-female -intersex';
+            } else if (currentGender === 'F') {
+                genderTag = '-male -intersex';
+            }
+        }
 
-        async function startGame() {
-            score = 0;
-            currentStreak = 0;
-            postCache = [];
-            hasChosen = false;
-            messageEl.style.display = 'block';
+        genderOptions.forEach(opt => {
+            opt.addEventListener('click', () => {
+                currentGender = opt.dataset.gender;
+                genderOptions.forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                updateGenderTag();
+                reloadGame();
+            });
+        });
+
+        document.querySelector('.gender-option[data-gender="ALL"]').classList.add('active');
+
+        applyTagBtn.addEventListener('click', () => {
+            applyUserTag();
+        });
+
+        clearTagBtn.addEventListener('click', () => {
+            userTag = '';
+            tagInput.value = '';
+            reloadGame();
+        });
+
+        async function applyUserTag() {
+            const tag = tagInput.value.trim();
+            if (!tag) {
+                userTag = '';
+                reloadGame();
+                return;
+            }
+            try {
+                const url = `${TAG_API_BASE}?search[name_matches]=${encodeURIComponent(tag)}`;
+                const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
+                if (!res.ok) throw new Error('API error');
+                const data = await res.json();
+                if (data.length === 0) {
+                    resultMessageEl.textContent = 'Tag not found';
+                    resultMessageEl.style.color = '#f44336';
+                    return;
+                }
+                const postCount = data[0].post_count;
+                if (postCount < 320) {
+                    resultMessageEl.textContent = 'Error: less than 320 posts with this tag';
+                    resultMessageEl.style.color = '#f44336';
+                    return;
+                }
+                userTag = tag;
+                reloadGame();
+            } catch (err) {
+                resultMessageEl.textContent = `Error: ${err.message}`;
+                resultMessageEl.style.color = '#f44336';
+            }
+        }
+
+        async function loadNextPair() {
             resultMessageEl.textContent = '';
-            updateUI();
+            const nextPair = await getNextPair();
+            if (nextPair.length === 2) {
+                if (Math.random() < 0.5) nextPair.reverse();
+                showPair(nextPair);
+            } else {
+                resultMessageEl.innerHTML = 'No more suitable images available<br>Refresh to play again';
+                gameArea.innerHTML = '<div id="loading">No images left</div>';
+            }
+        }
+
+        async function reloadGame() {
+            postCache = [];
+            currentPair = [];
+            hasChosen = false;
             messageEl.textContent = 'Fetching initial images...';
             gameArea.innerHTML = `
                 <div class="card-container"><div class="card"><div id="loading">Loading...</div></div></div>
                 <div class="card-container"><div class="card"><div id="loading">Loading...</div></div></div>
             `;
-
             const initialPosts = await fetchPosts(INITIAL_FETCH);
             postCache.push(...initialPosts);
-
             const firstPair = await getNextPair();
             if (firstPair.length === 2) {
                 if (Math.random() < 0.5) firstPair.reverse();
                 showPair(firstPair);
                 prefetchMore();
             } else {
-                messageEl.textContent = 'Not enough valid posts with score difference ≥ 200 — try again later';
+                messageEl.textContent = `Not enough valid posts with score difference ≥ ${MIN_SCORE_DIFFERENCE} — try again later or change filters`;
             }
+        }
+
+        async function startGame() {
+            score = 0;
+            currentStreak = 0;
+            hasChosen = false;
+            messageEl.style.display = 'block';
+            resultMessageEl.textContent = '';
+            updateUI();
+            await reloadGame();
         }
 
         if (localStorage.getItem(STORAGE_KEY_AGE_CONFIRMED) === 'true') {
