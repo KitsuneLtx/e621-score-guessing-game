@@ -586,38 +586,42 @@
         });
 
         function renderHistory() {
-            historyList.innerHTML = '';
-            if (artsHistory.length === 0) {
-                historyList.innerHTML = '<p style="color:#aaa;">No arts viewed yet.</p>';
-                return;
-            }
+    historyList.innerHTML = '';
+    if (artsHistory.length === 0) {
+        historyList.innerHTML = '<p style="color:#aaa;">No arts viewed yet.</p>';
+        return;
+    }
 
-            artsHistory.forEach((pair, index) => {
-                const entry = document.createElement('div');
-                entry.className = 'history-entry';
-                entry.innerHTML = `<strong>Round ${index + 1}</strong>`;
+    
+    [...artsHistory].reverse().forEach((pair, reversedIndex) => {
+       
+        const roundNumber = artsHistory.length - reversedIndex;
 
-                const links = document.createElement('div');
-                links.className = 'history-links';
+        const entry = document.createElement('div');
+        entry.className = 'history-entry';
+        entry.innerHTML = `<strong>Round ${roundNumber}</strong>`;
 
-                const leftLink = document.createElement('a');
-                leftLink.href = `https://e621.net/posts/${pair.left}`;
-                leftLink.target = '_blank';
-                leftLink.className = 'history-link';
-                leftLink.textContent = `Post #${pair.left} (left)`;
+        const links = document.createElement('div');
+        links.className = 'history-links';
 
-                const rightLink = document.createElement('a');
-                rightLink.href = `https://e621.net/posts/${pair.right}`;
-                rightLink.target = '_blank';
-                rightLink.className = 'history-link';
-                rightLink.textContent = `Post #${pair.right} (right)`;
+        const leftLink = document.createElement('a');
+        leftLink.href = `https://e621.net/posts/${pair.left}`;
+        leftLink.target = '_blank';
+        leftLink.className = 'history-link';
+        leftLink.textContent = `Post #${pair.left} (left)`;
 
-                links.appendChild(leftLink);
-                links.appendChild(rightLink);
-                entry.appendChild(links);
-                historyList.appendChild(entry);
-            });
-        }
+        const rightLink = document.createElement('a');
+        rightLink.href = `https://e621.net/posts/${pair.right}`;
+        rightLink.target = '_blank';
+        rightLink.className = 'history-link';
+        rightLink.textContent = `Post #${pair.right} (right)`;
+
+        links.appendChild(leftLink);
+        links.appendChild(rightLink);
+        entry.appendChild(links);
+        historyList.appendChild(entry);
+    });
+}
 
         let score = 0;
         let coins = parseInt(localStorage.getItem(STORAGE_KEY_COINS)) || 0;
@@ -1014,4 +1018,5 @@
     </script>
 </body>
 </html>
+
 
