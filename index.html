@@ -5,20 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>e621 Score Guessing Game</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+        }
+
         body {
             font-family: Arial, sans-serif;
             background-color: #0a1421;
             color: #eee;
-            margin: 0;
-            padding: 20px;
             text-align: center;
             min-height: 100vh;
             position: relative;
+            padding: 20px;
         }
+
         h1 { color: #ffcc00; margin: 15px 0 10px; font-size: 2.6em; }
         #hud { font-size: 1.9em; margin: 10px 0 25px; }
         #score { color: #4caf50; }
         #coins { color: #ffd700; }
+
         #high-score {
             position: absolute;
             top: 20px;
@@ -30,49 +42,58 @@
             border-radius: 8px;
             z-index: 20;
         }
+
         #game-container { max-width: 1250px; margin: 0 auto; width: 100%; }
+
         #game-area {
             display: flex;
             justify-content: center;
             gap: 60px;
             margin: 20px auto;
             width: 100%;
-            min-height: 700px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 0 10px;
         }
+
         .card-container {
             width: 520px;
-            min-height: 700px;
             display: flex;
             flex-direction: column;
             position: relative;
+            flex: 0 1 520px;
         }
+
         .card {
             width: 100%;
-            min-height: 650px;
             background: #1a1a1a;
             border: 4px solid #444;
             border-radius: 20px;
             overflow: hidden;
             cursor: pointer;
-            transition: all 0.8s ease;
+            transition: all 0.3s ease;
             box-shadow: 0 6px 20px rgba(0,0,0,0.8);
             aspect-ratio: 3 / 4;
             display: flex;
             flex-direction: column;
             position: relative;
         }
+
         .card:hover {
-            transform: scale(1.03);
             border-color: #ffcc00;
+            box-shadow: 0 12px 40px rgba(255, 204, 0, 0.4), 0 0 0 4px rgba(255, 204, 0, 0.15);
         }
+
         .card img {
             width: 100%;
             height: 100%;
             object-fit: contain;
             background: #000;
             flex-grow: 1;
+            display: block;
         }
+
         .score-overlay {
             position: absolute;
             bottom: 0;
@@ -89,22 +110,24 @@
             opacity: 0;
             transition: opacity 0.4s ease;
         }
-        .revealed .score-overlay {
-            opacity: 1;
-        }
+
+        .revealed .score-overlay { opacity: 1; }
+
         .dimmed {
             opacity: 0.55;
             filter: grayscale(60%);
         }
+
         .highlighted {
-            transform: scale(1.10);
             box-shadow: 0 0 25px rgba(76, 175, 80, 0.6);
         }
+
         #message {
             font-size: 2.1em;
             margin: 15px 0 20px;
             min-height: 2.4em;
         }
+
         #result-message {
             font-size: 1.8em;
             margin: 30px 0 40px;
@@ -112,9 +135,6 @@
             font-weight: bold;
         }
 
-        /* ────────────────────────────────────────
-           Controls placed BELOW the cards — centered
-        ──────────────────────────────────────── */
         #controls-below {
             max-width: 1100px;
             margin: 40px auto 80px;
@@ -124,7 +144,6 @@
             align-items: center;
             gap: 32px;
             padding: 0 20px;
-            box-sizing: border-box;
         }
 
         #powerups {
@@ -153,17 +172,18 @@
             padding: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.6);
         }
+
         .powerup-btn:hover:not(:disabled) {
             transform: translateY(-4px) scale(1.05);
             border-color: #ffcc00;
             box-shadow: 0 8px 25px rgba(255, 204, 0, 0.4);
         }
+
         .powerup-btn:disabled {
             opacity: 0.35;
             cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
         }
+
         .powerup-btn .cost {
             font-size: 0.95em;
             color: #ffcc00;
@@ -177,13 +197,12 @@
             padding: 20px;
             width: 100%;
             max-width: 520px;
-            box-sizing: border-box;
             display: flex;
             flex-direction: column;
             gap: 20px;
         }
 
-        #gender-switch {
+        #gender-switch, #resolution-toggle {
             display: flex;
             background: #1a1a1a;
             border-radius: 20px;
@@ -191,15 +210,17 @@
             overflow: hidden;
             width: 100%;
         }
-        .gender-option {
+
+        .gender-option, .res-option {
             flex: 1;
             padding: 12px;
             cursor: pointer;
             transition: background 0.3s, color 0.3s;
             text-align: center;
-            font-size: 1.3em;
+            font-size: 1.1em;
         }
-        .gender-option.active {
+
+        .gender-option.active, .res-option.active {
             background: #ffcc00;
             color: #000;
         }
@@ -207,8 +228,9 @@
         #tag-search {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 16px;
         }
+
         #tag-input {
             padding: 12px;
             border-radius: 8px;
@@ -217,6 +239,7 @@
             color: #eee;
             font-size: 1.1em;
         }
+
         .tag-btn {
             padding: 12px;
             background: #4a4a4a;
@@ -224,11 +247,17 @@
             border-radius: 8px;
             color: #eee;
             cursor: pointer;
-            transition: background 0.3s;
             font-size: 1.1em;
         }
-        .tag-btn:hover {
-            background: #5a5a5a;
+
+        .tag-btn:hover { background: #5a5a5a; }
+
+        #res-warning {
+            font-size: 0.9em;
+            color: #ffcc00;
+            text-align: center;
+            margin-top: 8px;
+            opacity: 0.8;
         }
 
         #footer-fixed {
@@ -238,13 +267,31 @@
             font-size: 1.1em;
             color: #aaa;
             z-index: 5;
-            pointer-events: none;
             background: rgba(10, 20, 33, 0.7);
             padding: 6px 14px;
             border-radius: 8px;
         }
-        #footer-fixed a { color: #ffcc00; text-decoration: none; font-weight: bold; }
-        #footer-fixed a:hover { text-decoration: underline; }
+
+        #loser-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            color: #ff4444;
+            font-size: 4em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9998;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.6s ease;
+            text-shadow: 0 0 15px #000;
+        }
+
+        #loser-overlay.active {
+            opacity: 1;
+        }
 
         #age-warning {
             position: fixed;
@@ -258,8 +305,10 @@
             padding: 30px;
             text-align: center;
         }
+
         #age-warning h2 { color: #ff4444; font-size: 2.8em; margin-bottom: 20px; }
         #age-warning p { font-size: 1.4em; max-width: 700px; margin: 0 auto 40px; line-height: 1.5; }
+
         .age-btn {
             padding: 18px 60px;
             font-size: 1.5em;
@@ -269,10 +318,30 @@
             cursor: pointer;
             transition: all 0.2s;
         }
+
         #confirm-18 { background: #28a745; color: white; }
         #confirm-18:hover { background: #218838; }
         #exit-under18 { background: #dc3545; color: white; }
         #exit-under18:hover { background: #c82333; }
+
+        @media (max-width: 1100px) {
+            #game-area {
+                gap: 20px;
+                overflow-y: hidden;
+            }
+            .card-container {
+                width: 48%;
+                min-width: 160px;
+                flex: 1 1 45%;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .card-container {
+                width: 46%;
+                min-width: 140px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -296,7 +365,6 @@
             <div id="message">Which one has the higher score? Click to guess!</div>
             <div id="game-area"></div>
 
-            <!-- Controls moved here – below the cards, centered -->
             <div id="controls-below">
                 <div id="powerups">
                     <button class="powerup-btn" id="powerup-reveal-one" disabled>Reveal 1<br><span class="cost">5 🪙</span></button>
@@ -309,11 +377,20 @@
                         <span class="gender-option" data-gender="ALL">ALL</span>
                         <span class="gender-option" data-gender="M">♂</span>
                     </div>
+
                     <div id="tag-search">
                         <input id="tag-input" type="text" placeholder="Enter e621 tag">
                         <div style="display: flex; gap: 12px; width: 100%;">
                             <button id="apply-tag" class="tag-btn" style="flex:1;">Apply</button>
                             <button id="clear-tag" class="tag-btn" style="flex:1;">Clear</button>
+                        </div>
+
+                        <div id="resolution-toggle">
+                            <span class="res-option active" data-res="low">Low res</span>
+                            <span class="res-option" data-res="high">High res</span>
+                        </div>
+                        <div id="res-warning" style="display: none;">
+                            High res uses full-size images — slower loading & more data usage
                         </div>
                     </div>
                 </div>
@@ -324,8 +401,10 @@
     </div>
 
     <div id="footer-fixed">
-        Developed by Kitsune
+        Developed by <span id="kitsune-trigger" style="color:#ffcc00; cursor:pointer; font-weight:bold;">Kitsune</span>
     </div>
+
+    <div id="loser-overlay"></div>
 
     <script>
         const API_BASE = 'https://e621.net/posts.json';
@@ -341,12 +420,36 @@
         const STORAGE_KEY_HIGH_SCORE = 'e621-guess-game-high-score';
         const STORAGE_KEY_AGE_CONFIRMED = 'e621-age-confirmed';
         const STORAGE_KEY_SEEN_INSTRUCTION = 'e621-guess-game-seen-instruction';
+        const STORAGE_KEY_RESOLUTION = 'e621-guess-game-resolution';
 
-        // Age verification
+        const loserPhrasesWrong = [
+            "Wrong, loser~",
+            "Nice try, idiot",
+            "Lmao get rekt",
+            "Skill issue detected",
+            "Cope harder",
+            "You are actually hopeless",
+            "Even bots do better than you",
+            "Are you allergic to winning"
+        ];
+
+        const loserPhrasesRobbed = [
+            "You selected correctly but I decided that you don't deserve to score. Try again, nerd",
+            "Wow you got it... and I still took it away. Cry about it.",
+            "Point denied. Skill issue.",
+            "Correct answer, still no point for you, loser.",
+            "I changed my mind. You're still trash.",
+            "Good job! ...jk no points for you"
+        ];
+
         const ageWarning = document.getElementById('age-warning');
         const gameContainer = document.getElementById('game-container');
         const confirm18 = document.getElementById('confirm-18');
         const exitUnder18 = document.getElementById('exit-under18');
+        const loserOverlay = document.getElementById('loser-overlay');
+        const kitsuneTrigger = document.getElementById('kitsune-trigger');
+
+        let isLoserMode = false;
 
         if (localStorage.getItem(STORAGE_KEY_AGE_CONFIRMED) === 'true') {
             ageWarning.style.display = 'none';
@@ -364,7 +467,12 @@
 
         exitUnder18.addEventListener('click', () => window.close());
 
-        // Game logic
+        kitsuneTrigger.addEventListener('click', () => {
+            isLoserMode = true;
+            kitsuneTrigger.style.color = '#ff4444';
+            kitsuneTrigger.style.textDecoration = 'underline';
+        });
+
         let score = 0;
         let coins = parseInt(localStorage.getItem(STORAGE_KEY_COINS)) || 0;
         let highScore = parseInt(localStorage.getItem(STORAGE_KEY_HIGH_SCORE)) || 0;
@@ -376,25 +484,35 @@
         let genderTag = '';
         let userTag = '';
         let currentGender = 'ALL';
+        let useHighRes = localStorage.getItem(STORAGE_KEY_RESOLUTION) === 'high';
 
-        const scoreEl = document.getElementById('score');
-        const coinsEl = document.getElementById('coins');
-        const highScoreEl = document.getElementById('high-score');
-        const messageEl = document.getElementById('message');
+        const scoreEl       = document.getElementById('score');
+        const coinsEl       = document.getElementById('coins');
+        const highScoreEl   = document.getElementById('high-score');
+        const messageEl     = document.getElementById('message');
         const resultMessageEl = document.getElementById('result-message');
-        const gameArea = document.getElementById('game-area');
-        const puRevealOne = document.getElementById('powerup-reveal-one');
-        const puRevealBoth = document.getElementById('powerup-reveal-both');
+        const gameArea      = document.getElementById('game-area');
+        const puRevealOne   = document.getElementById('powerup-reveal-one');
+        const puRevealBoth  = document.getElementById('powerup-reveal-both');
         const genderOptions = document.querySelectorAll('.gender-option');
-        const tagInput = document.getElementById('tag-input');
-        const applyTagBtn = document.getElementById('apply-tag');
-        const clearTagBtn = document.getElementById('clear-tag');
+        const tagInput      = document.getElementById('tag-input');
+        const applyTagBtn   = document.getElementById('apply-tag');
+        const clearTagBtn   = document.getElementById('clear-tag');
+        const resOptions    = document.querySelectorAll('.res-option');
+        const resWarning    = document.getElementById('res-warning');
 
         const hasSeenInstruction = localStorage.getItem(STORAGE_KEY_SEEN_INSTRUCTION) === 'true';
+
+        if (useHighRes) {
+            resOptions.forEach(o => o.classList.remove('active'));
+            document.querySelector('.res-option[data-res="high"]').classList.add('active');
+            resWarning.style.display = 'block';
+        }
 
         function saveData() {
             localStorage.setItem(STORAGE_KEY_COINS, coins);
             localStorage.setItem(STORAGE_KEY_HIGH_SCORE, highScore);
+            localStorage.setItem(STORAGE_KEY_RESOLUTION, useHighRes ? 'high' : 'low');
         }
 
         function updateUI() {
@@ -404,6 +522,18 @@
             puRevealOne.disabled = coins < 5;
             puRevealBoth.disabled = coins < 10;
             saveData();
+        }
+
+        function showLoserMessage(isRobbed = false) {
+            const phrases = isRobbed ? loserPhrasesRobbed : loserPhrasesWrong;
+            const msg = phrases[Math.floor(Math.random() * phrases.length)];
+
+            loserOverlay.textContent = msg;
+            loserOverlay.classList.add('active');
+
+            setTimeout(() => {
+                loserOverlay.classList.remove('active');
+            }, 2200);
         }
 
         function checkHighScore() {
@@ -426,6 +556,7 @@
                     const rating = post.rating?.toLowerCase() || '';
                     return ['jpg','jpeg','png'].includes(ext) &&
                            post.preview?.url &&
+                           post.file?.url &&
                            post.score?.total >= MIN_SCORE &&
                            rating !== 's';
                 });
@@ -472,7 +603,7 @@
         }
 
         function getImageUrl(post) {
-            return post.preview?.url || '';
+            return useHighRes ? (post.file?.url || post.preview?.url || '') : (post.preview?.url || '');
         }
 
         function createCard(post, index) {
@@ -480,13 +611,16 @@
             div.className = 'card';
             div.dataset.index = index;
             div.style.borderColor = '#444';
+
             const img = document.createElement('img');
             img.src = getImageUrl(post);
             img.alt = `Post ${post.id}`;
             img.loading = 'lazy';
+
             const scoreOverlay = document.createElement('div');
             scoreOverlay.className = 'score-overlay';
             scoreOverlay.textContent = `Score: ${post.score.total}`;
+
             div.appendChild(img);
             div.appendChild(scoreOverlay);
             div.addEventListener('click', () => handleGuess(index));
@@ -538,17 +672,27 @@
             const won = clickedIndex === higherIndex;
 
             if (won) {
-                score += 1;
-                currentStreak += 1;
-                resultMessageEl.textContent = 'Correct! +1 point';
-                resultMessageEl.style.color = '#4caf50';
-                checkHighScore();
+                if (isLoserMode && Math.random() < 0.5) {
+                    showLoserMessage(true);
+                    resultMessageEl.textContent = "Point stolen lol";
+                    resultMessageEl.style.color = '#ff4444';
+                } else {
+                    score += 1;
+                    currentStreak += 1;
+                    resultMessageEl.textContent = 'Correct! +1 point';
+                    resultMessageEl.style.color = '#4caf50';
+                    checkHighScore();
+                }
             } else {
                 coins += currentStreak;
                 resultMessageEl.innerHTML = `Wrong! Score reset<br>+${currentStreak} coins awarded`;
                 resultMessageEl.style.color = '#f44336';
                 currentStreak = 0;
                 score = 0;
+
+                if (isLoserMode) {
+                    showLoserMessage(false);
+                }
             }
 
             updateUI();
@@ -598,13 +742,9 @@
         };
 
         function updateGenderTag() {
-            if (currentGender === 'ALL') {
-                genderTag = '';
-            } else if (currentGender === 'M') {
-                genderTag = '-female -intersex';
-            } else if (currentGender === 'F') {
-                genderTag = '-male -intersex';
-            }
+            if (currentGender === 'ALL') genderTag = '';
+            else if (currentGender === 'M') genderTag = '-female -intersex';
+            else if (currentGender === 'F') genderTag = '-male -intersex';
         }
 
         genderOptions.forEach(opt => {
@@ -619,9 +759,17 @@
 
         document.querySelector('.gender-option[data-gender="ALL"]').classList.add('active');
 
-        applyTagBtn.addEventListener('click', () => {
-            applyUserTag();
+        resOptions.forEach(opt => {
+            opt.addEventListener('click', () => {
+                resOptions.forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                useHighRes = opt.dataset.res === 'high';
+                resWarning.style.display = useHighRes ? 'block' : 'none';
+                reloadGame();
+            });
         });
+
+        applyTagBtn.addEventListener('click', applyUserTag);
 
         clearTagBtn.addEventListener('click', () => {
             userTag = '';
@@ -646,8 +794,7 @@
                     resultMessageEl.style.color = '#f44336';
                     return;
                 }
-                const postCount = data[0].post_count;
-                if (postCount < 320) {
+                if (data[0].post_count < 320) {
                     resultMessageEl.textContent = 'Error: less than 320 posts with this tag';
                     resultMessageEl.style.color = '#f44336';
                     return;
