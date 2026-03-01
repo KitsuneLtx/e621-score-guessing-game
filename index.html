@@ -211,18 +211,30 @@
             width: 100%;
         }
 
-        .gender-option, .res-option {
+        .gender-option, .res-option, #arts-history-btn {
             flex: 1;
             padding: 12px;
             cursor: pointer;
             transition: background 0.3s, color 0.3s;
             text-align: center;
             font-size: 1.1em;
+            background: #1a1a1a;
+            border: none;
         }
 
         .gender-option.active, .res-option.active {
             background: #ffcc00;
             color: #000;
+        }
+
+        #arts-history-btn {
+            background: #3a3a3a;
+            color: #ffcc00;
+            font-weight: bold;
+        }
+
+        #arts-history-btn:hover {
+            background: #5a5a5a;
         }
 
         #tag-search {
@@ -291,6 +303,69 @@
 
         #loser-overlay.active {
             opacity: 1;
+        }
+
+        #arts-history-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.75);
+            z-index: 9997;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #arts-history-content {
+            background: #1a1a1a;
+            border: 3px solid #444;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            color: #eee;
+            position: relative;
+        }
+
+        #arts-history-close {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            font-size: 1.8em;
+            cursor: pointer;
+            color: #ff4444;
+        }
+
+        #arts-history-close:hover {
+            color: #ff7777;
+        }
+
+        .history-entry {
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #444;
+        }
+
+        .history-entry:last-child {
+            border-bottom: none;
+        }
+
+        .history-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 8px;
+        }
+
+        .history-link {
+            color: #ffcc00;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .history-link:hover {
+            text-decoration: underline;
         }
 
         #age-warning {
@@ -389,6 +464,9 @@
                             <span class="res-option active" data-res="low">Low res</span>
                             <span class="res-option" data-res="high">High res</span>
                         </div>
+
+                        <button id="arts-history-btn">Arts History</button>
+
                         <div id="res-warning" style="display: none;">
                             High res uses full-size images — slower loading & more data usage
                         </div>
@@ -405,6 +483,14 @@
     </div>
 
     <div id="loser-overlay"></div>
+
+    <div id="arts-history-modal">
+        <div id="arts-history-content">
+            <span id="arts-history-close">×</span>
+            <h2 style="margin-bottom: 16px;">Previous Arts</h2>
+            <div id="history-list"></div>
+        </div>
+    </div>
 
     <script>
         const API_BASE = 'https://e621.net/posts.json';
@@ -429,15 +515,23 @@
             "Skill issue detected",
             "Cope harder",
             "You are actually hopeless",
-            "Are you allergic to winning"
+            "Even bots do better than you",
+            "Bro is allergic to winning",
+            "Ratio + L + touch grass",
+            "I expected more... disappointment"
         ];
 
         const loserPhrasesRobbed = [
-            "You don't deserve to score. Try again, nerd",
+            "You selected correctly but I decided that you don't deserve to score. Try again, nerd",
+            "Correct... but no. Git gud.",
             "Wow you got it... and I still took it away. Cry about it.",
-            "Point denied.",
-            "Correct answer, still no point for you, loser.",
-            "Good job! ...no points for you though"
+            "Nice guess. Shame I hate you.",
+            "Point denied. Skill issue.",
+            "You thought you won? Cute.",
+            "Correct answer, incorrect life choices.",
+            "I changed my mind. You're still trash.",
+            "Technically right, spiritually robbed.",
+            "Good job! ...jk no points for you"
         ];
 
         const ageWarning = document.getElementById('age-warning');
@@ -446,8 +540,13 @@
         const exitUnder18 = document.getElementById('exit-under18');
         const loserOverlay = document.getElementById('loser-overlay');
         const kitsuneTrigger = document.getElementById('kitsune-trigger');
+        const artsHistoryBtn = document.getElementById('arts-history-btn');
+        const artsHistoryModal = document.getElementById('arts-history-modal');
+        const artsHistoryClose = document.getElementById('arts-history-close');
+        const historyList = document.getElementById('history-list');
 
         let isLoserMode = false;
+        let artsHistory = [];
 
         if (localStorage.getItem(STORAGE_KEY_AGE_CONFIRMED) === 'true') {
             ageWarning.style.display = 'none';
@@ -470,6 +569,55 @@
             kitsuneTrigger.style.color = '#ff4444';
             kitsuneTrigger.style.textDecoration = 'underline';
         });
+
+        artsHistoryBtn.addEventListener('click', () => {
+            renderHistory();
+            artsHistoryModal.style.display = 'flex';
+        });
+
+        artsHistoryModal.addEventListener('click', (e) => {
+            if (e.target === artsHistoryModal) {
+                artsHistoryModal.style.display = 'none';
+            }
+        });
+
+        artsHistoryClose.addEventListener('click', () => {
+            artsHistoryModal.style.display = 'none';
+        });
+
+        function renderHistory() {
+            historyList.innerHTML = '';
+            if (artsHistory.length === 0) {
+                historyList.innerHTML = '<p style="color:#aaa;">No arts viewed yet.</p>';
+                return;
+            }
+
+            artsHistory.forEach((pair, index) => {
+                const entry = document.createElement('div');
+                entry.className = 'history-entry';
+                entry.innerHTML = `<strong>Round ${artsHistory.length - index}</strong>`;
+
+                const links = document.createElement('div');
+                links.className = 'history-links';
+
+                const leftLink = document.createElement('a');
+                leftLink.href = `https://e621.net/posts/${pair.left}`;
+                leftLink.target = '_blank';
+                leftLink.className = 'history-link';
+                leftLink.textContent = `Post #${pair.left} (left)`;
+
+                const rightLink = document.createElement('a');
+                rightLink.href = `https://e621.net/posts/${pair.right}`;
+                rightLink.target = '_blank';
+                rightLink.className = 'history-link';
+                rightLink.textContent = `Post #${pair.right} (right)`;
+
+                links.appendChild(leftLink);
+                links.appendChild(rightLink);
+                entry.appendChild(links);
+                historyList.appendChild(entry);
+            });
+        }
 
         let score = 0;
         let coins = parseInt(localStorage.getItem(STORAGE_KEY_COINS)) || 0;
@@ -664,8 +812,16 @@
                 }
             }
 
-            const left = currentPair[0];
-            const right = currentPair[1];
+            const leftPost = currentPair[0];
+            const rightPost = currentPair[1];
+
+            artsHistory.push({
+                left: leftPost.id,
+                right: rightPost.id
+            });
+
+            const left = leftPost;
+            const right = rightPost;
             const higherIndex = left.score.total > right.score.total ? 0 : 1;
             const won = clickedIndex === higherIndex;
 
@@ -858,4 +1014,3 @@
     </script>
 </body>
 </html>
-
