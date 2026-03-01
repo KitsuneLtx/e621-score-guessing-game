@@ -595,7 +595,7 @@
             artsHistory.forEach((pair, index) => {
                 const entry = document.createElement('div');
                 entry.className = 'history-entry';
-                entry.innerHTML = `<strong>Round ${artsHistory.length - index}</strong>`;
+                entry.innerHTML = `<strong>Round ${index + 1}</strong>`;
 
                 const links = document.createElement('div');
                 links.className = 'history-links';
@@ -1014,3 +1014,4 @@
     </script>
 </body>
 </html>
+
